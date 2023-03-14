@@ -1,0 +1,45 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('ContinuousDownload'){
+            
+        
+        steps
+        {
+            git 'https://github.com/prasadcloud/maven2.git'
+        }
+       }
+        stage('ContinuousBuild')
+        {
+            steps
+            {
+                sh 'mvn package'
+            }
+        }
+        stage('ContinuousDeploy')
+        {
+            steps
+            {
+             deploy adapters: [tomcat9(credentialsId: '114b4f79-87a4-46d3-9f42-a21bf37b17ad', path: '', url: 'http://172.31.13.164:8080')], contextPath: 'testapp2', war: '**/*.war'
+            }
+        }
+        stage('ContinousTesting')
+        {
+            steps
+            {
+             git 'https://github.com/prasadcloud/FunctionalTesting.git'
+             sh 'java -jar /var/lib/jenkins/workspace/DeclarativePipeline1/testing.jar'
+            }
+        }
+            stage('ContinousDelivery')
+        {
+            steps
+            {
+             input message: 'Need Approval from Dev Lead', submitter: 'srini'
+             deploy adapters: [tomcat9(credentialsId: 'bfda19c6-2e25-4428-b56e-dd079052d2e7', path: '', url: 'http://172.31.4.50:8080')], contextPath: 'prodapp1', war: '**/*.war'
+            }
+        }
+    }
+}
